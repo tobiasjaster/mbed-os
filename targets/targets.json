@@ -5133,7 +5133,6 @@
             "PORTINOUT",
             "PORTOUT",
             "SERIAL",
-            "SERIAL_FC",
             "TSC",
             "USTICKER"
         ],
