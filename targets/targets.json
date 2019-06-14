@@ -8458,6 +8458,19 @@
         "release_versions": ["2", "5"],
         "bootloader_supported": true
     },
+
+
+    "STROMMESSBOARD": {
+        "inherits": ["FAMILY_STM32"],
+        "core": "Cortex-M4F",
+        "default_toolchain": "GCC_ARM",
+        "extra_labels_add": ["STM32F4", "STM32F401", "STM32F401xC", "STM32F401CC"],
+        "supported_toolchains": ["GCC_ARM"],
+        "device_has_add": [],
+        "device_name": "STM32F401CC"
+    },
+
+
     "VBLUNO52": {
         "supported_form_factors": ["ARDUINO"],
         "inherits": ["MCU_NRF52832"],
