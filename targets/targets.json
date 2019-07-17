@@ -8459,7 +8459,50 @@
         "bootloader_supported": true
     },
 
-
+    
+    "DATALOGGER": {
+        "inherits": ["FAMILY_STM32"],
+        "core": "Cortex-M0+",
+        "default_toolchain": "GCC_ARM",
+        "extra_labels_add": ["STM32L0", "STM32L052", "STM32L052x6", "STM32L052K6"],
+        "supported_toolchains": ["GCC_ARM"],
+        "config": {
+            "clock_source": {
+                "help": "Mask value : USE_PLL_HSI",
+                "value": "USE_PLL_HSI",
+                "macro_name": "CLOCK_SOURCE"
+            },
+            "lpticker_lptim": {
+                "help": "This target supports LPTIM. Set value 1 to use LPTIM for LPTICKER, or 0 to use RTC wakeup timer",
+                "value": 1
+            }
+        },
+        "overrides": {
+            "lse_available": 0,
+            "lpticker_delay_ticks": 4
+        },
+        "device_has_add": [
+            "LPTICKER",
+            "RTC",
+            "ANALOGIN",
+            "ANALOGOUT",
+            "I2C",
+            "I2C_ASYNCH",
+            "INTERRUPTIN",
+            "PORTIN",
+            "PORTINOUT",
+            "PORTOUT",
+            "STDIO_MESSAGES",
+            "SLEEP",
+            "SPI",
+            "SPI_ASYNCH",
+            "TRNG",
+            "CRC",
+            "FLASH",
+            "MPU"
+        ],
+        "device_name": "STM32L052K6"
+    },
     "STROMMESSBOARD": {
         "inherits": ["FAMILY_STM32"],
         "core": "Cortex-M4F",
