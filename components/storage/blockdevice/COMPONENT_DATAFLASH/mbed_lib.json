@@ -14,5 +14,13 @@
             "help": "Configure device to use DataFlash address space.",
             "value": "0"
         }
+    },
+    "target_overrides": {
+       "HOMEAUTOMATISIERUNG": {
+           "SPI_MOSI": "FLASH_SPI_MOSI",
+           "SPI_MISO": "FLASH_SPI_MISO",
+           "SPI_CLK":  "FLASH_SPI_SCK",
+           "SPI_CS":   "FLASH_SPI_CS"
+       } 
     }
 }

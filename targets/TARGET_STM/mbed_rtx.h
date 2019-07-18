@@ -106,6 +106,7 @@
 
 #elif (defined(TARGET_STM32F429ZI) ||\
        defined(TARGET_STM32F437VG) ||\
+       defined(TARGET_STM32F437VI) ||\
        defined(TARGET_STM32F439VI) ||\
        defined(TARGET_STM32F439ZI) ||\
        defined(TARGET_STM32WB55RG))
