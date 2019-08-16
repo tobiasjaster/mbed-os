@@ -17,7 +17,7 @@
 #ifndef MBED_PORTINOUT_H
 #define MBED_PORTINOUT_H
 
-#include "platform/platform.h"
+#include "drivers/PortInOutInterface.h"
 
 #if DEVICE_PORTINOUT || defined(DOXYGEN_ONLY)
 
@@ -34,7 +34,7 @@ namespace mbed {
  *
  * @note Synchronization level: Interrupt safe
  */
-class PortInOut {
+class PortInOut : public PortInOutInterface {
 public:
 
     /** Create an PortInOut, connected to the specified port

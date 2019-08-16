@@ -75,6 +75,13 @@
 #include "drivers/MbedCRC.h"
 #include "drivers/QSPI.h"
 #include "drivers/Watchdog.h"
+#include "drivers/ExpDigitalIn.h"
+//#include "drivers/ExpDigitalInOut.h"
+#include "drivers/ExpDigitalOut.h"
+#include "drivers/ExpInterruptIn.h"
+#include "drivers/ExpPortIn.h"
+//#include "drivers/ExpPortInOut.h"
+#include "drivers/ExpPortOut.h"
 
 // mbed Internal components
 #include "drivers/ResetReason.h"
