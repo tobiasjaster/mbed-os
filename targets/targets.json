@@ -8476,6 +8476,22 @@
                 "help": "Mask value : USE_PLL_HSE_EXTC | USE_PLL_HSE_XTAL (need HW patch) | USE_PLL_HSI",
                 "value": "USE_PLL_HSE_EXTC|USE_PLL_HSI",
                 "macro_name": "CLOCK_SOURCE"
+            },
+            "flash25-id-match": {
+            	"value": "0x001F",
+            	"macro_name": "FLASH25_ID_MATCH"
+            },
+            "flash25-id-density-mask": {
+            	"value": "0x001F",
+            	"macro_name": "FLASH25_ID_DENSITY_MASK"
+            },
+            "flash25-page-size": {
+            	"value": "0x100",
+            	"macro_name": "FLASH25_PAGE_SIZE"
+            },
+            "flash25-block-size": {
+            	"value": "0x1000",
+            	"macro_name": "FLASH25_BLOCK_SIZE"
             }
         },
         "macros_add": [
