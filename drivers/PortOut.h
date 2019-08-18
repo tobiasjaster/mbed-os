@@ -17,7 +17,7 @@
 #ifndef MBED_PORTOUT_H
 #define MBED_PORTOUT_H
 
-#include "platform/platform.h"
+#include "drivers/PortOutInterface.h"
 
 #if DEVICE_PORTOUT || defined(DOXYGEN_ONLY)
 
@@ -55,7 +55,7 @@ namespace mbed {
  * }
  * @endcode
  */
-class PortOut {
+class PortOut : public PortOutInterface {
 public:
 
     /** Create a PortOut, connected to the specified port

@@ -14,73 +14,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef MBED_INTERRUPTIN_H
-#define MBED_INTERRUPTIN_H
+#ifndef EXPINTERRUPTIN_H
+#define EXPINTERRUPTIN_H
 
+#include "mbed.h"
 #include "drivers/InterruptInInterface.h"
+#include "GPIOExpansionInterface.h"
 
-#if DEVICE_INTERRUPTIN || defined(DOXYGEN_ONLY)
-
-#include "hal/gpio_api.h"
-#include "platform/mbed_critical.h"
-#include "platform/mbed_toolchain.h"
+#if DEVICE_EXPANSION || defined(DOXYGEN_ONLY)
 
 namespace mbed {
-/**
- * \defgroup drivers_InterruptIn InterruptIn class
- * \ingroup drivers-public-api-gpio
- * @{
- */
 
-/** A digital interrupt input, used to call a function on a rising or falling edge
+/** An external digital interrupt input, used to call a function on a rising or falling edge
  *
  * @note Synchronization level: Interrupt safe
- *
- * Example:
- * @code
- * // Flash an LED while waiting for events
- *
- * #include "mbed.h"
- *
- * InterruptIn event(p16);
- * DigitalOut led(LED1);
- *
- * void trigger() {
- *     printf("triggered!\n");
- * }
- *
- * int main() {
- *     // register trigger() to be called upon the rising edge of event
- *     event.rise(&trigger);
- *     while(1) {
- *         led = !led;
- *         wait(0.25);
- *     }
- * }
- * @endcode
  */
-class InterruptIn : public InterruptInInterface {
+class ExpInterruptIn : InterruptInInterface {
 
 public:
 
-    /** Create an InterruptIn connected to the specified pin
+    /** Create an ExpInterruptIn connected to the specified pin
      *
-     *  @param pin InterruptIn pin to connect to
+     *  @param exp 	ExpansionInterface which controls the external pin
+		 *  @param port ExpInterruptIn port to connect to
+		 *  @param pin 	ExpInterruptIn pin to connect to
      */
-    InterruptIn(PinName pin);
+	ExpInterruptIn(GPIOExpansionInterface *exp, ExpPortName port, ExpPinName pin);
 
-    /** Create an InterruptIn connected to the specified pin,
-     *  and the pin configured to the specified mode.
-     *
-     *  @param pin InterruptIn pin to connect to
-     *  @param mode Desired Pin mode configuration.
-     *  (Valid values could be PullNone, PullDown, PullUp and PullDefault.
-     *  See PinNames.h for your target for definitions)
-     *
-     */
-    InterruptIn(PinName pin, PinMode mode);
+	  /** Create an ExpInterruptIn connected to the specified pin
+	   *
+	   *  @param exp 	ExpansionInterface which controls the external pin
+		 *  @param port ExpInterruptIn port to connect to
+		 *  @param pin 	ExpInterruptIn pin to connect to
+		 *  @param mode the initial mode of the pin
+	   */
+	ExpInterruptIn(GPIOExpansionInterface *exp, ExpPortName port, ExpPinName pin, PinMode mode);
 
-    virtual ~InterruptIn();
+    virtual ~ExpInterruptIn();
 
     /** Read the input, represented as 0 or 1 (int)
      *
@@ -152,30 +122,32 @@ public:
      */
     void mode(PinMode pull);
 
-    /** Enable IRQ. This method depends on hardware implementation, might enable one
-     *  port interrupts. For further information, check gpio_irq_enable().
+    /** Enable IRQ. Set the GPIOExpander Interrupt Register
      */
     void enable_irq();
 
-    /** Disable IRQ. This method depends on hardware implementation, might disable one
-     *  port interrupts. For further information, check gpio_irq_disable().
+    /** Disable IRQ. Reset the GPIOExpander Interrupt Register
      */
     void disable_irq();
 
     static void _irq_handler(uint32_t id, gpio_irq_event event);
 #if !defined(DOXYGEN_ONLY)
 protected:
-    gpio_t gpio;
-    gpio_irq_t gpio_irq;
-
-    Callback<void()> _rise;
-    Callback<void()> _fall;
-
-    void irq_init(PinName pin);
+    bool _checkAttachment(void);
+    bool _setAttachment(Callback<void(uint32_t,gpio_irq_event)> func, uint32_t id);
+    bool _resetAttachment(void);
+    bool _setDirection(ExpDigitalDirection direction);
+    bool _setMode(PinMode mode);
+    bool _setInterrupt(void);
+    bool _isConnected;
+    bool _irqEnabled;
+    GPIOExpansionInterface *_exp;
+	ExpPortName _port;
+	ExpPinName _pin;
+	Callback<void()> _rise;
+	Callback<void()> _fall;
 #endif
 };
-
-/** @}*/
 
 } // namespace mbed
 
