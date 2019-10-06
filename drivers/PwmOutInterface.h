@@ -14,13 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef MBED_PWMOUT_H
-#define MBED_PWMOUT_H
+#ifndef MBED_PWMOUTINTERFACE_H_
+#define MBED_PWMOUTINTERFACE_H_
 
-#include "drivers/PwmOutInterface.h"
-
-#if DEVICE_PWMOUT || defined(DOXYGEN_ONLY)
-#include "hal/pwmout_api.h"
+#include "platform/platform.h"
 
 namespace mbed {
 /**
@@ -28,40 +25,9 @@ namespace mbed {
  * \ingroup drivers-public-api-gpio
  * @{
  */
-
-/** A pulse-width modulation digital output
- *
- * @note Synchronization level: Interrupt safe
- *
- * Example
- * @code
- * // Gradually change the intensity of the LED.
- * #include "mbed.h"
- *
- * PwmOut led(LED1);
- *
- * int main() {
- *     while(1) {
- *         led = led + 0.01;
- *         wait(0.2);
- *         if(led == 1.0) {
- *             led = 0;
- *         }
- *     }
- * }
- * @endcode
- */
-class PwmOut : public PwmOutInterface {
+class PwmOutInterface {
 
 public:
-
-    /** Create a PwmOut connected to the specified pin
-     *
-     *  @param pin PwmOut pin to connect to
-     */
-    PwmOut(PinName pin);
-
-    ~PwmOut();
 
     /** Set the output duty-cycle, specified as a percentage (float)
      *
@@ -70,7 +36,7 @@ public:
      *    0.0f (representing on 0%) and 1.0f (representing on 100%).
      *    Values outside this range will be saturated to 0.0f or 1.0f.
      */
-    void write(float value);
+    virtual void write(float value) = 0;
 
     /** Return the current output duty-cycle setting, measured as a percentage (float)
      *
@@ -82,7 +48,9 @@ public:
      *  @note
      *  This value may not match exactly the value set by a previous write().
      */
-    float read();
+    virtual float read() {
+    	return 0;
+    }
 
     /** Set the PWM period, specified in seconds (float), keeping the duty cycle the same.
      *
@@ -91,79 +59,36 @@ public:
      *   The resolution is currently in microseconds; periods smaller than this
      *   will be set to zero.
      */
-    void period(float seconds);
+    virtual void period(float seconds) = 0;
 
     /** Set the PWM period, specified in milliseconds (int), keeping the duty cycle the same.
      *  @param ms Change the period of a PWM signal in milliseconds without modifying the duty cycle
      */
-    void period_ms(int ms);
+    virtual void period_ms(int ms) = 0;
 
     /** Set the PWM period, specified in microseconds (int), keeping the duty cycle the same.
      *  @param us Change the period of a PWM signal in microseconds without modifying the duty cycle
      */
-    void period_us(int us);
+    virtual void period_us(int us) = 0;
 
     /** Set the PWM pulsewidth, specified in seconds (float), keeping the period the same.
      *  @param seconds Change the pulse width of a PWM signal specified in seconds (float)
      */
-    void pulsewidth(float seconds);
+    virtual void pulsewidth(float seconds) = 0;
 
     /** Set the PWM pulsewidth, specified in milliseconds (int), keeping the period the same.
      *  @param ms Change the pulse width of a PWM signal specified in milliseconds
      */
-    void pulsewidth_ms(int ms);
+    virtual void pulsewidth_ms(int ms) = 0;
 
     /** Set the PWM pulsewidth, specified in microseconds (int), keeping the period the same.
      *  @param us Change the pulse width of a PWM signal specified in microseconds
      */
-    void pulsewidth_us(int us);
-
-    /** A operator shorthand for write()
-     *  \sa PwmOut::write()
-     */
-    PwmOut &operator= (float value)
-    {
-        // Underlying call is thread safe
-        write(value);
-        return *this;
-    }
-
-    /** A operator shorthand for write()
-     * \sa PwmOut::write()
-     */
-    PwmOut &operator= (PwmOut &rhs)
-    {
-        // Underlying call is thread safe
-        write(rhs.read());
-        return *this;
-    }
-
-    /** An operator shorthand for read()
-     * \sa PwmOut::read()
-     */
-    operator float()
-    {
-        // Underlying call is thread safe
-        return read();
-    }
-
-#if !(DOXYGEN_ONLY)
-protected:
-    /** Lock deep sleep only if it is not yet locked */
-    void lock_deep_sleep();
-
-    /** Unlock deep sleep in case it is locked */
-    void unlock_deep_sleep();
-
-    pwmout_t _pwm;
-    bool _deep_sleep_locked;
-#endif
+    virtual void pulsewidth_us(int us) = 0;
 };
 
 /** @}*/
 
 } // namespace mbed
 
-#endif
-
-#endif
+#endif /* MBED_PWMOUTINTERFACE_H_ */
