@@ -17,7 +17,7 @@
 #ifndef MBED_ANALOGIN_H
 #define MBED_ANALOGIN_H
 
-#include "platform/platform.h"
+#include "drivers/AnalogInInterface.h"
 
 #if DEVICE_ANALOGIN || defined(DOXYGEN_ONLY)
 
@@ -63,7 +63,7 @@ namespace mbed {
  * }
  * @endcode
  */
-class AnalogIn {
+class AnalogIn : public AnalogInInterface{
 
 public:
 

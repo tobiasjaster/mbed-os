@@ -14,23 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef MBED_INTERRUPTIN_H
-#define MBED_INTERRUPTIN_H
 
-#include "drivers/InterruptInInterface.h"
+#ifndef MBED_INTERRUPTININTERFACE_H_
+#define MBED_INTERRUPTININTERFACE_H_
 
-#if DEVICE_INTERRUPTIN || defined(DOXYGEN_ONLY)
-
-#include "hal/gpio_api.h"
-#include "platform/mbed_critical.h"
-#include "platform/mbed_toolchain.h"
+#include "platform/platform.h"
+#include "platform/Callback.h"
+#include "platform/NonCopyable.h"
+#include "hal/gpio_irq_api.h"
 
 namespace mbed {
-/**
- * \defgroup drivers_InterruptIn InterruptIn class
- * \ingroup drivers-public-api-gpio
- * @{
- */
+/** \addtogroup drivers */
 
 /** A digital interrupt input, used to call a function on a rising or falling edge
  *
@@ -50,7 +44,6 @@ namespace mbed {
  * }
  *
  * int main() {
- *     // register trigger() to be called upon the rising edge of event
  *     event.rise(&trigger);
  *     while(1) {
  *         led = !led;
@@ -58,29 +51,11 @@ namespace mbed {
  *     }
  * }
  * @endcode
+ * @ingroup drivers
  */
-class InterruptIn : public InterruptInInterface {
+class InterruptInInterface : private NonCopyable<InterruptInInterface> {
 
 public:
-
-    /** Create an InterruptIn connected to the specified pin
-     *
-     *  @param pin InterruptIn pin to connect to
-     */
-    InterruptIn(PinName pin);
-
-    /** Create an InterruptIn connected to the specified pin,
-     *  and the pin configured to the specified mode.
-     *
-     *  @param pin InterruptIn pin to connect to
-     *  @param mode Desired Pin mode configuration.
-     *  (Valid values could be PullNone, PullDown, PullUp and PullDefault.
-     *  See PinNames.h for your target for definitions)
-     *
-     */
-    InterruptIn(PinName pin, PinMode mode);
-
-    virtual ~InterruptIn();
 
     /** Read the input, represented as 0 or 1 (int)
      *
@@ -88,18 +63,17 @@ public:
      *    An integer representing the state of the input pin,
      *    0 for logical 0, 1 for logical 1
      */
-    int read();
+    virtual int read() {
 
-    /** An operator shorthand for read()
-     */
-    operator int();
+    	return 0;
+    }
 
 
     /** Attach a function to call when a rising edge occurs on the input
      *
      *  @param func A pointer to a void function, or 0 to set as none
      */
-    void rise(Callback<void()> func);
+    virtual void rise(Callback<void()> func) = 0;
 
     /** Attach a member function to call when a rising edge occurs on the input
      *
@@ -111,20 +85,15 @@ public:
      */
     template<typename T, typename M>
     MBED_DEPRECATED_SINCE("mbed-os-5.1",
-                          "The rise function does not support cv-qualifiers. Replaced by "
-                          "rise(callback(obj, method)).")
-    void rise(T *obj, M method)
-    {
-        core_util_critical_section_enter();
-        rise(callback(obj, method));
-        core_util_critical_section_exit();
-    }
+        "The rise function does not support cv-qualifiers. Replaced by "
+        "rise(callback(obj, method)).")
+    void rise(T *obj, M method);
 
     /** Attach a function to call when a falling edge occurs on the input
      *
      *  @param func A pointer to a void function, or 0 to set as none
      */
-    void fall(Callback<void()> func);
+    virtual void fall(Callback<void()> func) = 0;
 
     /** Attach a member function to call when a falling edge occurs on the input
      *
@@ -136,49 +105,29 @@ public:
      */
     template<typename T, typename M>
     MBED_DEPRECATED_SINCE("mbed-os-5.1",
-                          "The fall function does not support cv-qualifiers. Replaced by "
-                          "fall(callback(obj, method)).")
-    void fall(T *obj, M method)
-    {
-        core_util_critical_section_enter();
-        fall(callback(obj, method));
-        core_util_critical_section_exit();
-    }
+        "The fall function does not support cv-qualifiers. Replaced by "
+        "fall(callback(obj, method)).")
+    void fall(T *obj, M method);
 
     /** Set the input pin mode
      *
-     *  @param pull PullUp, PullDown, PullNone, PullDefault
-     *  See PinNames.h for your target for definitions)
+     *  @param pull PullUp, PullDown, PullNone
      */
-    void mode(PinMode pull);
+    virtual void mode(PinMode pull) = 0;
 
-    /** Enable IRQ. This method depends on hardware implementation, might enable one
+    /** Enable IRQ. This method depends on hw implementation, might enable one
      *  port interrupts. For further information, check gpio_irq_enable().
      */
-    void enable_irq();
+    virtual void enable_irq() = 0;
 
-    /** Disable IRQ. This method depends on hardware implementation, might disable one
+    /** Disable IRQ. This method depends on hw implementation, might disable one
      *  port interrupts. For further information, check gpio_irq_disable().
      */
-    void disable_irq();
+    virtual void disable_irq() = 0;
 
     static void _irq_handler(uint32_t id, gpio_irq_event event);
-#if !defined(DOXYGEN_ONLY)
-protected:
-    gpio_t gpio;
-    gpio_irq_t gpio_irq;
-
-    Callback<void()> _rise;
-    Callback<void()> _fall;
-
-    void irq_init(PinName pin);
-#endif
 };
-
-/** @}*/
 
 } // namespace mbed
 
-#endif
-
-#endif
+#endif /* MBED_OS_DRIVERS_INTERRUPTININTERFACE_H_ */

@@ -1,5 +1,5 @@
 /* mbed Microcontroller Library
- * Copyright (c) 2006-2019 ARM Limited
+ * Copyright (c) 2006-2013 ARM Limited
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,66 +14,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef MBED_PORTIN_H
-#define MBED_PORTIN_H
+#ifndef EXPPORTIN_H
+#define EXPPORTIN_H
 
+#include "mbed.h"
 #include "drivers/PortInInterface.h"
+#include "GPIOExpansionInterface.h"
 
-#if DEVICE_PORTIN || defined(DOXYGEN_ONLY)
+#if DEVICE_EXPANSION || defined(DOXYGEN_ONLY)
 
-#include "hal/port_api.h"
-
-namespace mbed {
-/**
- * \defgroup drivers_PortIn PortIn class
- * \ingroup drivers-public-api-gpio
- * @{
- */
-
-/** A multiple pin digital input
+/** An external multiple pin digital input
  *
  * @note Synchronization level: Interrupt safe
- *
- *  Example:
- * @code
- * // Turn on an LED if any pins of Port2[0:5] are high
- *
- * #include "mbed.h"
- *
- * PortIn     p(Port2, 0x0000003F);  // Port2 pins [0:5] only
- * DigitalOut led(LED4);
- *
- * int main() {
- *     while(1) {
- *         int pins = p.read();
- *         if(pins) {
- *             led = 1;
- *         } else {
- *             led = 0;
- *         }
- *     }
- * }
- * @endcode
  */
-class PortIn : public PortInInterface{
+class ExpPortIn : public PortInInterface{
 public:
 
-    /** Create a PortIn, connected to the specified port
-     *
-     *  @param port Port to connect to (as defined in target's PortNames.h)
+	  /** Create an ExpPortIn connected to the specified pin
+		 *
+		 *  @param exp 	ExpansionInterface which controls the external pin
+		 *  @param port ExpPortIn port to connect to
      *  @param mask Bitmask defines which port pins should be an input (0 - ignore, 1 - include)
-        */
-    PortIn(PortName port, int mask = 0xFFFFFFFF);
+		 */
+	ExpPortIn(GPIOExpansionInterface *exp, ExpPortName port, int mask = 0xFFFFFFFF);
 
+	~ExpPortIn();
     /** Read the value input to the port
      *
      *  @returns
      *    An integer with each bit corresponding to the associated pin value
      */
-    int read()
-    {
-        return port_read(&_port);
-    }
+    int read();
 
     /** Set the input pin mode
      *
@@ -83,18 +54,21 @@ public:
 
     /** A shorthand for read()
      */
-    operator int()
-    {
-        return read();
-    }
+    operator int();
 
-private:
-    port_t _port;
+#if !defined(DOXYGEN_ONLY)
+protected:
+    bool _checkAttachment(void);
+    bool _setAttachment(void);
+    bool _resetAttachment(void);
+    bool _setDirection(ExpDigitalDirection direction);
+    bool _setMode(PinMode mode);
+    GPIOExpansionInterface *_exp;
+    ExpPortName _port;
+    int _mask;
+    bool _isConnected;
+#endif
 };
-
-/** @}*/
-
-} // namespace mbed
 
 #endif
 

@@ -17,7 +17,7 @@
 #ifndef MBED_ANALOGOUT_H
 #define MBED_ANALOGOUT_H
 
-#include "platform/platform.h"
+#include "drivers/AnalogOutInterface.h"
 
 #if DEVICE_ANALOGOUT || defined(DOXYGEN_ONLY)
 
@@ -53,7 +53,7 @@ namespace mbed {
  * }
  * @endcode
  */
-class AnalogOut {
+class AnalogOut : public AnalogOutInterface {
 
 public:
 
