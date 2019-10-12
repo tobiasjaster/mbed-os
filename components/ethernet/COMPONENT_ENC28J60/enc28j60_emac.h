@@ -122,6 +122,11 @@ public:
     virtual void power_down(void);
 
     /**
+     * Return Value of _prev_link_status_up
+     *
+     */
+    virtual bool get_link_state(void);
+    /**
      * Sets a callback that needs to be called for packets received for that
      * interface
      *
@@ -163,12 +168,12 @@ public:
     virtual void set_memory_manager(EMACMemoryManager &mem_mngr);
 
 private:
-    void packet_rx();
-    void link_status_task();
-    bool low_level_init_successful();
-    emac_mem_buf_t *low_level_input();
-    static void receiver_thread_function(void* params);
     static void interrupt_thread_function(void* params);
+    void link_status_task();
+    static void receiver_thread_function(void* params);
+    void packet_rx();
+    emac_mem_buf_t *low_level_input();
+//    bool low_level_init_successful();
 
     rtos::Thread *_irq_thread;
     rtos::Thread *_rx_thread;
