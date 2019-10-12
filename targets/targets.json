@@ -8492,6 +8492,36 @@
             "flash25-block-size": {
             	"value": "0x1000",
             	"macro_name": "FLASH25_BLOCK_SIZE"
+            },
+            "enc28j60_mosi": {
+                "help": "Value: PinName for SPI MOSI of ENC28J60",
+                "value": "D11",
+                "macro_name": "ETH_MOSI"
+            },
+            "enc28j60_miso": {
+                "help": "Value: PinName for SPI MISO of ENC28J60",
+                "value": "D12",
+                "macro_name": "ETH_MISO"
+            },
+            "enc28j60_sck": {
+                "help": "Value: PinName for SPI SCK of ENC28J60",
+                "value": "D13",
+                "macro_name": "ETH_SCK"
+            },
+            "enc28j60_cs": {
+                "help": "Value: PinName for SPI CS of ENC28J60",
+                "value": "D10",
+                "macro_name": "ETH_CS"
+            },
+            "enc28j60_reset": {
+                "help": "Value: PinName for RESET of ENC28J60",
+                "value": "D9",
+                "macro_name": "ETH_RESET"
+            },
+            "enc28j60_int": {
+                "help": "Value: PinName for RESET of ENC28J60",
+                "value": "D7",
+                "macro_name": "ETH_INT"
             }
         },
         "macros_add": [
