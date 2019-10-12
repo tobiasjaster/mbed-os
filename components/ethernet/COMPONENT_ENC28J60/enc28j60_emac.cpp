@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include "mbed.h"
 #include "mbed_interface.h"
 #include "mbed_wait_api.h"
 #include "mbed_assert.h"
@@ -23,8 +24,9 @@
 
 #include "../enc28j60/enc28j60.h"
 #include "enc28j60_eth_drv.h"
+#include "enc28j60_emac.h"
 
-#ifndef DEVICE_ENC28J60
+#ifndef COMPONENT_ENC28J60
 #error "ENC28J60_ETH should be defined, check device_cfg.h!"
 #endif
 
@@ -34,11 +36,11 @@
 
 static ENC28J60_EMAC *board_emac_pointer = NULL;
 
-ENC28J60_EMAC::ENC28J60_EMAC() : _int(ETH_INT) {
+ENC28J60_EMAC::ENC28J60_EMAC() : _int(MBED_CONF_ENC28J60_ETH_INT) {
 
 	_irq_thread = new Thread(IRQ_THREAD_PRIORITY,(uint32_t)IRQ_THREAD_STACKSIZE);
 	_rx_thread = new Thread(RX_THREAD_PRIORITY,(uint32_t)RX_THREAD_STACKSIZE);
-	_enc28j60 = new ENC28J60_ETH_DRV(ETH_MOSI, ETH_MISO, ETH_SCK, ETH_CS, ETH_RESET);
+	_enc28j60 = new ENC28J60_ETH_DRV(MBED_CONF_ENC28J60_ETH_MOSI, MBED_CONF_ENC28J60_ETH_MISO, MBED_CONF_ENC28J60_ETH_SCK, MBED_CONF_ENC28J60_ETH_CS, MBED_CONF_ENC28J60_ETH_RESET);
 	_enc28j60->hard_reset(false);
 	power_down();
 	#ifdef ETH_INT
@@ -57,62 +59,6 @@ ENC28J60_EMAC::ENC28J60_EMAC() : _int(ETH_INT) {
  */
 void ENC28J60_EMAC::Interrupt_Handler(void) {
 	_irq_thread->flags_set(FLAG_IRQ);
-}
-
-/** \brief  Allocates a emac_mem_buf_t and returns the data from the incoming
- * packet.
- *
- *  \return a emac_mem_buf_t filled with the received packet
- * (including MAC header)
- */
-emac_mem_buf_t *ENC28J60_EMAC::low_level_input() {
-    emac_mem_buf_t *p = NULL;
-    uint32_t message_length = 0;
-    enc28j60_rx_handle_t handle;
-    uint32_t length = 0;
-
-    _ETHLockMutex.lock();
-    if (_enc28j60->rx_peek_next_packet(&handle)) {
-        _ETHLockMutex.unlock();
-        return p;
-    }
-    _ETHLockMutex.unlock();
-    message_length = handle.packet_len;
-    if (message_length == 0) {
-        return p;
-    }
-
-    p = _memory_manager->alloc_heap(message_length, ENC28J60_BUFF_ALIGNMENT);
-
-    if (p != NULL) {
-        _ETHLockMutex.lock();
-        length = _memory_manager->get_len(p);
-        MBED_ASSERT(length < 0xFFFF);
-        _enc28j60->rx_read_data_packet(reinterpret_cast<uint8_t*>(_memory_manager->get_ptr(p)),
-        		0,
-				(uint16_t)(_memory_manager->get_len(p)));
-        _ETHLockMutex.unlock();
-    }
-    return p;
-}
-
-/** \brief  Receiver thread.
- *
- * Woken by thread flags to receive packets or clean up transmit
- *
- *  \param[in] params pointer to the interface data
- */
-void ENC28J60_EMAC::receiver_thread_function(void* params) {
-    ENC28J60_EMAC *enc28j60_enet = static_cast<ENC28J60_EMAC *>(params);
-
-    while(1) {
-        uint32_t flags = ThisThread::flags_wait_any(FLAG_RX);
-
-        if (flags & FLAG_RX) {
-        	enc28j60_enet->packet_rx();
-        }
-        enc28j60_enet->_enc28j60->enable_interrupt(ENC28J60_INTERRUPT_ENABLE);
-    }
 }
 
 void ENC28J60_EMAC::interrupt_thread_function(void* params) {
@@ -179,6 +125,44 @@ void ENC28J60_EMAC::interrupt_thread_function(void* params) {
     }
 }
 
+void ENC28J60_EMAC::link_status_task() {
+    uint16_t phy_basic_status_reg_value = 0;
+    bool current_link_status_up = false;
+
+    /* Get current status */
+    _ETHLockMutex.lock();
+    _enc28j60->phyRead(PHSTAT2, &phy_basic_status_reg_value);
+    _ETHLockMutex.unlock();
+
+    current_link_status_up = (bool)((phy_basic_status_reg_value & PHSTAT2_LSTAT) > 0);
+
+    /* Compare with previous state */
+    if (current_link_status_up != _prev_link_status_up) {
+        _prev_link_status_up = current_link_status_up;
+        if(_emac_link_state_cb){
+        	_emac_link_state_cb(current_link_status_up);
+        }
+    }
+}
+
+/** \brief  Receiver thread.
+ *
+ * Woken by thread flags to receive packets or clean up transmit
+ *
+ *  \param[in] params pointer to the interface data
+ */
+void ENC28J60_EMAC::receiver_thread_function(void* params) {
+    ENC28J60_EMAC *enc28j60_enet = static_cast<ENC28J60_EMAC *>(params);
+
+    while(1) {
+        uint32_t flags = ThisThread::flags_wait_any(FLAG_RX);
+
+        if (flags & FLAG_RX) {
+        	enc28j60_enet->packet_rx();
+        }
+        enc28j60_enet->_enc28j60->enable_interrupt(ENC28J60_INTERRUPT_ENABLE);
+    }
+}
 
 /** \brief  Packet reception task
  *
@@ -194,6 +178,90 @@ void ENC28J60_EMAC::packet_rx()
             _emac_link_input_cb(p);
             _enc28j60->rx_packetHandled();
     	}
+    }
+}
+
+/** \brief  Allocates a emac_mem_buf_t and returns the data from the incoming
+ * packet.
+ *
+ *  \return a emac_mem_buf_t filled with the received packet
+ * (including MAC header)
+ */
+emac_mem_buf_t *ENC28J60_EMAC::low_level_input() {
+    emac_mem_buf_t *p = NULL;
+    uint32_t message_length = 0;
+    enc28j60_rx_handle_t handle;
+    uint32_t length = 0;
+
+    _ETHLockMutex.lock();
+    if (_enc28j60->rx_peek_next_packet(&handle)) {
+        _ETHLockMutex.unlock();
+        return p;
+    }
+    _ETHLockMutex.unlock();
+    message_length = handle.packet_len;
+    if (message_length == 0) {
+        return p;
+    }
+
+    p = _memory_manager->alloc_heap(message_length, ENC28J60_BUFF_ALIGNMENT);
+
+    if (p != NULL) {
+        _ETHLockMutex.lock();
+        length = _memory_manager->get_len(p);
+        MBED_ASSERT(length < 0xFFFF);
+        _enc28j60->rx_read_data_packet(reinterpret_cast<uint8_t*>(_memory_manager->get_ptr(p)),
+        		0,
+				(uint16_t)(_memory_manager->get_len(p)));
+        _ETHLockMutex.unlock();
+    }
+    return p;
+}
+
+
+uint32_t ENC28J60_EMAC::get_mtu_size() const
+{
+    return ENC28J60_ETH_MTU_SIZE;
+}
+
+uint32_t ENC28J60_EMAC::get_align_preference() const
+{
+    return ENC28J60_BUFF_ALIGNMENT;
+}
+
+void ENC28J60_EMAC::get_ifname(char *name, uint8_t size) const
+{
+    memcpy(name, ENC28J60_ETH_IF_NAME, (size < sizeof(ENC28J60_ETH_IF_NAME)) ?
+                                           size : sizeof(ENC28J60_ETH_IF_NAME));
+}
+
+uint8_t ENC28J60_EMAC::get_hwaddr_size() const
+{
+    return ENC28J60_HWADDR_SIZE;
+}
+
+bool ENC28J60_EMAC::get_hwaddr(uint8_t *addr) const
+{
+	enc28j60_error_t error = _enc28j60->read_mac_address((char*)addr);
+    if(error == ENC28J60_ERROR_NONE) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void ENC28J60_EMAC::set_hwaddr(const uint8_t *addr)
+{
+    if (!addr) {
+        return;
+    }
+
+    memcpy(_hwaddr, addr, sizeof _hwaddr);
+    _ETHLockMutex.lock();
+	enc28j60_error_t error = _enc28j60->write_mac_address((char*)addr);
+    _ETHLockMutex.unlock();
+    if (error) {
+        return;
     }
 }
 
@@ -244,26 +312,6 @@ bool ENC28J60_EMAC::link_out(emac_mem_buf_t *buf)
     }
 }
 
-void ENC28J60_EMAC::link_status_task() {
-    uint16_t phy_basic_status_reg_value = 0;
-    bool current_link_status_up = false;
-
-    /* Get current status */
-    _ETHLockMutex.lock();
-    _enc28j60->phyRead(PHSTAT2, &phy_basic_status_reg_value);
-    _ETHLockMutex.unlock();
-
-    current_link_status_up = (bool)((phy_basic_status_reg_value & PHSTAT2_LSTAT) > 0);
-
-    /* Compare with previous state */
-    if (current_link_status_up != _prev_link_status_up) {
-        if(_emac_link_state_cb){
-        	_emac_link_state_cb(current_link_status_up);
-        }
-        _prev_link_status_up = current_link_status_up;
-    }
-}
-
 bool ENC28J60_EMAC::power_up() {
 	board_emac_pointer = this;
 	volatile uint32_t timeout = 500;
@@ -303,50 +351,29 @@ bool ENC28J60_EMAC::power_up() {
 	return true;
 }
 
-uint32_t ENC28J60_EMAC::get_mtu_size() const
-{
-    return ENC28J60_ETH_MTU_SIZE;
+void ENC28J60_EMAC::power_down() {
+	_irq_thread->terminate();
+	_rx_thread->terminate();
+	_enc28j60->disable_mac_recv();
+	if (_enc28j60->readReg(ESTAT_RXBUSY) != 0) {
+		_enc28j60->enable_mac_recv();
+		return;
+	}
+	if (_enc28j60->readReg(ECON1_TXRTS) != 0) {
+		_enc28j60->enable_mac_recv();
+		return;
+	}
+	_enc28j60->writeOp(ENC28J60_BIT_FIELD_SET, ECON2, ECON2_VRPS);
+	_enc28j60->writeOp(ENC28J60_BIT_FIELD_SET, ECON2, ECON2_PWRSV);
+	_irq_thread->join();
+	_rx_thread->join();
+	delete _irq_thread;
+	delete _rx_thread;
 }
 
-uint32_t ENC28J60_EMAC::get_align_preference() const
+bool ENC28J60_EMAC::get_link_state(void)
 {
-    return ENC28J60_BUFF_ALIGNMENT;
-}
-
-void ENC28J60_EMAC::get_ifname(char *name, uint8_t size) const
-{
-    memcpy(name, ENC28J60_ETH_IF_NAME, (size < sizeof(ENC28J60_ETH_IF_NAME)) ?
-                                           size : sizeof(ENC28J60_ETH_IF_NAME));
-}
-
-uint8_t ENC28J60_EMAC::get_hwaddr_size() const
-{
-    return ENC28J60_HWADDR_SIZE;
-}
-
-bool ENC28J60_EMAC::get_hwaddr(uint8_t *addr) const
-{
-	enc28j60_error_t error = _enc28j60->read_mac_address((char*)addr);
-    if(error == ENC28J60_ERROR_NONE) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-void ENC28J60_EMAC::set_hwaddr(const uint8_t *addr)
-{
-    if (!addr) {
-        return;
-    }
-
-    memcpy(_hwaddr, addr, sizeof _hwaddr);
-    _ETHLockMutex.lock();
-	enc28j60_error_t error = _enc28j60->write_mac_address((char*)addr);
-    _ETHLockMutex.unlock();
-    if (error) {
-        return;
-    }
+	return _prev_link_status_up;
 }
 
 void ENC28J60_EMAC::set_link_input_cb(emac_link_input_cb_t input_cb)
@@ -372,26 +399,6 @@ void ENC28J60_EMAC::remove_multicast_group(const uint8_t *addr)
 void ENC28J60_EMAC::set_all_multicast(bool all)
 {
     // No action for now
-}
-
-void ENC28J60_EMAC::power_down() {
-	_irq_thread->terminate();
-	_rx_thread->terminate();
-	_enc28j60->disable_mac_recv();
-	if (_enc28j60->readReg(ESTAT_RXBUSY) != 0) {
-		_enc28j60->enable_mac_recv();
-		return;
-	}
-	if (_enc28j60->readReg(ECON1_TXRTS) != 0) {
-		_enc28j60->enable_mac_recv();
-		return;
-	}
-	_enc28j60->writeOp(ENC28J60_BIT_FIELD_SET, ECON2, ECON2_VRPS);
-	_enc28j60->writeOp(ENC28J60_BIT_FIELD_SET, ECON2, ECON2_PWRSV);
-	_irq_thread->join();
-	_rx_thread->join();
-	delete _irq_thread;
-	delete _rx_thread;
 }
 
 void ENC28J60_EMAC::set_memory_manager(EMACMemoryManager &mem_mngr)
