@@ -24,6 +24,14 @@
            "ETH_CS":   "FLASH_SPI_CS",
            "ETH_RESET":"FLASH_SPI_CS",
            "ETH_INT":  "FLASH_SPI_CS"
-       } 
+       },
+       "NUCLEO_F767ZI": {
+           "ETH_MOSI": "D11",
+           "ETH_MISO": "D12",
+           "ETH_SCK":  "D13",
+           "ETH_CS":   "D10",
+           "ETH_RESET":"D9",
+           "ETH_INT":  "D7"
+       }  
     }
 }

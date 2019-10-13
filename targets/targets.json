@@ -3166,7 +3166,7 @@
     },
     "NUCLEO_F767ZI": {
         "inherits": ["FAMILY_STM32"],
-        "components_add": ["FLASHIAP"],
+        "components_add": ["FLASHIAP", "ENC28J60"],
         "core": "Cortex-M7FD",
         "extra_labels_add": [
             "STM32F7",
