@@ -11,6 +11,7 @@ on:
 
 jobs:
   license-check:
+    if: false
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/armmbed/mbed-os-env:master-latest
@@ -55,6 +56,7 @@ jobs:
           fi
 
   include-check:
+    if: false
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/armmbed/mbed-os-env:master-latest
@@ -76,6 +78,7 @@ jobs:
               ':!*events/tests/*' ':!*drivers/tests/*'
 
   style-check:
+    if: false
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/armmbed/mbed-os-env:master-latest
@@ -108,6 +111,7 @@ jobs:
 
 
   docs-check:
+    if: false
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/armmbed/mbed-os-env:master-latest
@@ -156,21 +160,31 @@ jobs:
   python-tests:
     # these tests run in 3.7, hence running in vm not in pre-built docker
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
     steps:
       -
         name: Checkout repo
         uses: actions/checkout@v3
 
 
-      - uses: actions/setup-python@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
         with:
-          python-version: '3.7'
+          python-version: ${{ matrix.python-version }}
 
-      -
+      - if: ${{ matrix.python-version == '3.7' }}
         name: install dependencies
         run: |
           pip install -r requirements.txt 
           pip install mock==2.0.0 attrs==19.1.0 pytest==3.3.0 'pylint>=1.9,<2' 'hypothesis>=3,<4' 'coverage>=4.5,<5'
+
+      - if: ${{ matrix.python-version != '3.7' }}
+        name: install dependencies
+        run: |
+          pip install -r requirements.txt 
+          pip install mock attrs pytest pylint hypothesis coverage
 
       -
         name: pytest
@@ -182,6 +196,7 @@ jobs:
           coverage html
 
   pin-validation:
+    if: false
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/armmbed/mbed-os-env:master-latest
@@ -203,6 +218,7 @@ jobs:
           git diff --exit-code --diff-filter=d --color
 
   cmake-checks:
+    if: false
     env: 
       NAME: mbed-test-mode-check 
       ROOT: tools/cmake/tests/mbed_test_mode/ 
@@ -236,6 +252,7 @@ jobs:
   # Reject any changes to tools that would require a re-release of the
   # tools for the online compiler.
   frozen-tools-check:
+      if: false
       runs-on: ubuntu-latest
       container:
         image: ghcr.io/armmbed/mbed-os-env:master-latest

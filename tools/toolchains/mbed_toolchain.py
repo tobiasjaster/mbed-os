@@ -1113,8 +1113,20 @@ class mbedToolchain(with_metaclass(ABCMeta, object)):
             target.c_lib = target.c_lib.lower()
             if (
                 hasattr(target, "supported_c_libs") == False
-                or toolchain not in target.supported_c_libs
-                or target.c_lib not in target.supported_c_libs[toolchain]
+            ):
+                raise NotSupportedException(
+                   UNSUPPORTED_C_LIB_EXCEPTION_STRING.format(target.c_lib)
+                )
+            if (
+                toolchain not in target.supported_c_libs
+            ):
+                print("Toolchain: {}".format(toolchain))
+                print("supported_c_libs: {}".format(target.supported_c_libs))
+                raise NotSupportedException(
+                   UNSUPPORTED_C_LIB_EXCEPTION_STRING.format(target.c_lib)
+                )
+            if (
+                target.c_lib not in target.supported_c_libs[toolchain]
             ):
                 raise NotSupportedException(
                    UNSUPPORTED_C_LIB_EXCEPTION_STRING.format(target.c_lib)

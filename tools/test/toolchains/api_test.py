@@ -345,9 +345,7 @@ def test_detect_duplicates(filenames):
     assert "dupe.c" in notification["message"]
     assert "dupe.cpp" in notification["message"]
 
-@given(text(alphabet=ALPHABET + [os.sep], min_size=1))
-@given(booleans())
-@given(booleans())
+@given(text(alphabet=ALPHABET + [os.sep], min_size=1), booleans(), booleans())
 @settings(max_examples=20)
 def test_path_specified_gcc(gcc_loc, exists_at_loc, exists_in_path):
     with patch('tools.toolchains.gcc.exists') as _exists:

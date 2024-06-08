@@ -357,11 +357,11 @@ def check_required_modules(required_modules, verbose=True):
         before test suite can be used.
         @return returns True if all modules are installed already
     """
-    import imp
+    import importlib
     not_installed_modules = []
     for module_name in required_modules:
         try:
-            imp.find_module(module_name)
+            importlib.util.find_spec(module_name)
         except ImportError:
             # We also test against a rare case: module is an egg file
             try:

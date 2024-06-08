@@ -38,7 +38,10 @@ ARMC5_CORES = ["Cortex-M0", "Cortex-M0+", "Cortex-M3", "Cortex-M4",
 ARMC6_CORES = ARMC5_CORES + ["Cortex-M23", "Cortex-M23-NS",
                              "Cortex-M33", "Cortex-M33-NS", "Cortex-M33F", "Cortex-M33F-NS"]
 
-CORE_SUF_ALPHA = ["MDFNS02347-+"]
+if sys.version_info <= (3,7):
+	CORE_SUF_ALPHA = ["FDMNS02347-+"]
+else:
+	CORE_SUF_ALPHA = "FDMNS02347-+"
 
 @given(lists(sampled_from(["ARM", "uARM", "GCC_ARM", "ARMC6", "IAR", "GARBAGE"])),
        text(alphabet=CORE_SUF_ALPHA))

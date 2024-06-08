@@ -76,9 +76,9 @@ class TestArmToolchain(TestCase):
         mock_target.c_lib = "std"
         del mock_target.default_lib
         mock_target.supported_c_libs = {"arm": ["small"]}
-        with self.assertRaisesRegexp(NotSupportedException, UNSUPPORTED_C_LIB_EXCEPTION_STRING.format(mock_target.c_lib)):
+        with self.assertRaisesRegex(NotSupportedException, UNSUPPORTED_C_LIB_EXCEPTION_STRING.format(mock_target.c_lib)):
             ARM_STD(mock_target)
-        with self.assertRaisesRegexp(NotSupportedException, UNSUPPORTED_C_LIB_EXCEPTION_STRING.format(mock_target.c_lib)):
+        with self.assertRaisesRegex(NotSupportedException, UNSUPPORTED_C_LIB_EXCEPTION_STRING.format(mock_target.c_lib)):
             ARMC6(mock_target)
 
 
@@ -91,10 +91,10 @@ class TestArmToolchain(TestCase):
         mock_target.supported_c_libs = {"arm": [""]}
         mock_target.default_toolchain = "ARM"
         mock_target.supported_toolchains = ["ARM", "uARM", "ARMC5"]
-        with self.assertRaisesRegexp(NotSupportedException, UNSUPPORTED_C_LIB_EXCEPTION_STRING.format(mock_target.c_lib)):
+        with self.assertRaisesRegex(NotSupportedException, UNSUPPORTED_C_LIB_EXCEPTION_STRING.format(mock_target.c_lib)):
             ARM_STD(mock_target)
         mock_target.default_toolchain = "ARMC6"
-        with self.assertRaisesRegexp(NotSupportedException, UNSUPPORTED_C_LIB_EXCEPTION_STRING.format(mock_target.c_lib)):
+        with self.assertRaisesRegex(NotSupportedException, UNSUPPORTED_C_LIB_EXCEPTION_STRING.format(mock_target.c_lib)):
             ARMC6(mock_target)
 
     def test_arm_small_c_lib_swap_std_lib(self):
@@ -170,7 +170,7 @@ class TestGccToolchain(TestCase):
         mock_target.c_lib = "std"
         del mock_target.default_lib
         mock_target.supported_c_libs = {"gcc_arm": ["small"]}
-        with self.assertRaisesRegexp(NotSupportedException, UNSUPPORTED_C_LIB_EXCEPTION_STRING.format(mock_target.c_lib)):
+        with self.assertRaisesRegex(NotSupportedException, UNSUPPORTED_C_LIB_EXCEPTION_STRING.format(mock_target.c_lib)):
             GCC_ARM(mock_target)
 
     def test_gcc_arm_c_lib_small_exception(self):
@@ -182,7 +182,7 @@ class TestGccToolchain(TestCase):
         mock_target.supported_c_libs = {"gcc_arm": [""]}
         mock_target.default_toolchain = "GCC_ARM"
         mock_target.supported_toolchains = ["GCC_ARM"]
-        with self.assertRaisesRegexp(NotSupportedException, UNSUPPORTED_C_LIB_EXCEPTION_STRING.format(mock_target.c_lib)):
+        with self.assertRaisesRegex(NotSupportedException, UNSUPPORTED_C_LIB_EXCEPTION_STRING.format(mock_target.c_lib)):
             GCC_ARM(mock_target)
 
     def test_gcc_arm_small_c_lib_swap_std_lib(self):
@@ -237,7 +237,7 @@ class TestIarToolchain(TestCase):
         del mock_target.default_lib
         mock_target.supported_c_libs = {"iar": ["small"]}
         mock_target.supported_toolchains = ["IAR"]
-        with self.assertRaisesRegexp(NotSupportedException, UNSUPPORTED_C_LIB_EXCEPTION_STRING.format(mock_target.c_lib)):
+        with self.assertRaisesRegex(NotSupportedException, UNSUPPORTED_C_LIB_EXCEPTION_STRING.format(mock_target.c_lib)):
             IAR(mock_target)
 
     def test_iar_c_lib_small_exception(self):
@@ -248,7 +248,7 @@ class TestIarToolchain(TestCase):
         del mock_target.default_lib
         mock_target.supported_c_libs = {"iar": [""]}
         mock_target.supported_toolchains = ["IAR"]
-        with self.assertRaisesRegexp(NotSupportedException, UNSUPPORTED_C_LIB_EXCEPTION_STRING.format(mock_target.c_lib)):
+        with self.assertRaisesRegex(NotSupportedException, UNSUPPORTED_C_LIB_EXCEPTION_STRING.format(mock_target.c_lib)):
             IAR(mock_target)
 
     def test_iar_small_c_lib_swap_std_lib(self):

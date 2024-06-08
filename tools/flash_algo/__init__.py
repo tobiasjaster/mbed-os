@@ -30,7 +30,10 @@ import jinja2
 from collections import namedtuple
 from itertools import count
 
-from elftools.common.py3compat import bytes2str
+try:
+    from elftools.common.utils import bytes2str
+except ImportError:
+    from elftools.common.py3compat import bytes2str
 from elftools.elf.elffile import ELFFile
 from elftools.elf.sections import SymbolTableSection
 
